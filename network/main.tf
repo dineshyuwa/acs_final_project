@@ -17,7 +17,7 @@ resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr_block
   
   tags = {
-    Name = "MainVPC"
+    Name = "MainVPC-Group8-Production"
     Environment = "Production"
     Project = "MyProject"
   }
@@ -30,7 +30,7 @@ resource "aws_subnet" "public_subnets" {
   availability_zone = element(var.availability_zones, count.index)
   
    tags = {
-    Name = "PublicSubnet-${count.index}"
+    Name = "PublicSubnet-Group8-${count.index}"
     Environment = "Production"
     Project = "MyProject"
   }
@@ -43,7 +43,7 @@ resource "aws_subnet" "private_subnets" {
   availability_zone = element(var.availability_zones, count.index)
   
    tags = {
-    Name = "PrivateSubnet-${count.index}"
+    Name = "PrivateSubnet-Group8-${count.index}"
     Environment = "Production"
     Project = "MyProject"
   }
