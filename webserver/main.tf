@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 3.27"
+      version = "~> 3.63"
     }
   }
 
@@ -35,45 +35,92 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-resource "aws_s3_bucket" "website_images" {
-  bucket = "${var.prefix}-website-images"
-  website {
-    index_document = "index.html"
-    error_document = "error.html"
+resource "aws_s3_bucket" "s3" {
+  bucket = "${var.prefix}-website-images-143871234"
+}
+
+resource "aws_iam_policy" "s3_bucket_policy" {
+  name        = "s3-bucket-policy"
+  description = "Allows modifying S3 bucket policy"
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : "s3:PutBucketPolicy",
+        "Resource" : "${aws_s3_bucket.s3.arn}"
+      }
+    ]
+  })
+}
+
+resource "aws_s3_bucket_policy" "public_read" {
+  bucket = aws_s3_bucket.s3.bucket
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.s3.arn}/*"
+      },
+      {
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.s3.arn}/*"
+      }
+    ]
+  })
+}
+
+resource "aws_s3_bucket_ownership_controls" "ownership" {
+  bucket = aws_s3_bucket.s3.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "example" {
-  bucket = aws_s3_bucket.website_images.id
+resource "aws_s3_bucket_public_access_block" "pb" {
+  bucket = aws_s3_bucket.s3.id
 
-  block_public_acls   = false
-  block_public_policy = false
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
 
-resource "aws_s3_bucket_object" "example_image" {
-  bucket = aws_s3_bucket.website_images.bucket
-  key    = "project/images/example.jpeg"
-  source = "example.jpeg"
+resource "aws_s3_bucket_acl" "acl" {
+  depends_on = [aws_s3_bucket_ownership_controls.ownership]
+  bucket     = aws_s3_bucket.s3.id
+  acl        = "private"
 }
 
-data "aws_caller_identity" "current" {}
+resource "aws_s3_bucket_object" "object" {
+  bucket = aws_s3_bucket.s3.bucket
+  key    = "example.jpeg"
+  source = "./example.jpeg"
+}
 
-data "aws_iam_policy_document" "s3_bucket_policy" {
-  statement {
-    sid       = "Stmt1686172384560"
-    effect    = "Allow"
-    actions   = ["s3:GetObject"]
-    resources = ["arn:aws:s3:::project-website-images/*"]
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"]
+resource "aws_s3_bucket_lifecycle_configuration" "lifecycle" {
+  bucket = aws_s3_bucket.s3.id
+
+  rule {
+    id     = "example-lifecycle-rule"
+    status = "Enabled"
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    expiration {
+      days = 365
     }
   }
-}
-
-resource "aws_s3_bucket_policy" "bucket_policy" {
-  bucket = aws_s3_bucket.website_images.bucket
-  policy = data.aws_iam_policy_document.s3_bucket_policy.json
 }
 
 resource "aws_instance" "private_instance" {
@@ -112,14 +159,19 @@ resource "aws_instance" "public_instance" {
 
   user_data = <<-EOF
     #!/bin/bash
-    yum update -y
-    yum install -y httpd
-    systemctl start httpd
-    systemctl enable httpd
-    echo "<html><body>" > /var/www/html/index.html
-    echo "<h1>Welcome to our site! - Group8</h1>" >> /var/www/html/index.html
-    echo "<img src=\"https://ibb.co/dPLWrRZ\">" >> /var/www/html/index.html
-    echo "</body></html>" >> /var/www/html/index.html
+   yum update -y
+   yum install -y httpd
+   systemctl start httpd
+   systemctl enable httpd
+
+   # Download the image from the S3 URL
+   curl -o /var/www/html/example.jpeg https://project-website-images-143871234.s3.amazonaws.com/example.jpeg
+
+  # Create the HTML file with image reference
+  echo "<html><body>" > /var/www/html/index.html
+  echo "<h1>Welcome to our site! - Group8</h1>" >> /var/www/html/index.html
+  echo "<img src=\"/example.jpeg\">" >> /var/www/html/index.html
+  echo "</body></html>" >> /var/www/html/index.html
   EOF
 
   tags = {
