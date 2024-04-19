@@ -17,8 +17,8 @@ resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr_block
   
   tags = {
-    Name = "MainVPC-Group8-Production"
-    Environment = "Production"
+    Name = "MainVPC-Group8-${var.env}"
+    Environment = "${var.env}"
     Project = "MyProject"
   }
 }
@@ -31,7 +31,7 @@ resource "aws_subnet" "public_subnets" {
   
    tags = {
     Name = "PublicSubnet-Group8-${count.index}"
-    Environment = "Production"
+    Environment = "${var.env}"
     Project = "MyProject"
   }
 }
@@ -44,7 +44,7 @@ resource "aws_subnet" "private_subnets" {
   
    tags = {
     Name = "PrivateSubnet-Group8-${count.index}"
-    Environment = "Production"
+    Environment = "${var.env}"
     Project = "MyProject"
   }
 }

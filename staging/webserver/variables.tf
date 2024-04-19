@@ -25,3 +25,9 @@ variable "prefix" {
   default     = "project"
   description = "Name prefix"
 }
+
+variable "env"{
+  type = string
+  default = "staging"
+  description = "env"
+}

@@ -10,3 +10,9 @@ variable "availability_zones" {
   type        = list(string)
   description = "availability_zones"
 }
+
+variable "env" {
+  default     = "development"
+  type        = string
+  description = "env"
+}

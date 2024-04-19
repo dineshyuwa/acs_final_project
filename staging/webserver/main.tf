@@ -16,8 +16,8 @@ provider "aws" {
 data "terraform_remote_state" "public_subnet" {
   backend = "s3"
   config = {
-    bucket = "acs730-project-143871234"
-    key    = "project/network/terraform.tfstate"
+    bucket = "acs730-project8-143871234"
+    key    = "project/staging/network/terraform.tfstate"
     region = "us-east-1"
   }
 }
@@ -36,7 +36,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_s3_bucket" "s3" {
-  bucket = "${var.prefix}-website-images-143871234"
+  bucket = "${var.prefix}-${var.env}-website-images"
 }
 
 resource "aws_iam_policy" "s3_bucket_policy" {
@@ -227,7 +227,7 @@ resource "aws_security_group" "acs730" {
   }
 
   tags = {
-    "Name" = "${var.prefix}-EBS"
+    "Name" = "${var.prefix}-${var.env}-EBS"
   }
 }
 
@@ -275,6 +275,6 @@ resource "aws_ebs_volume" "web_ebs" {
   size              = 40
 
   tags = {
-    "Name" = "${var.prefix}-EBS-${count.index}"
+    "Name" = "${var.prefix}-${var.env}-EBS-${count.index}"
   }
 }
