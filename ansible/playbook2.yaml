@@ -1,0 +1,11 @@
+---
+- hosts: linux
+  gather_facts: False
+  become: yes
+
+  tasks:
+    - name: Install Apache Web Server
+      yum: name=httpd state=latest
+      
+    - name: Start Apache Web Server
+      service: name=httpd state=started enabled=yes

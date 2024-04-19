@@ -1,0 +1,62 @@
+---
+- hosts: linux
+  gather_facts: True
+  become: yes
+  
+  vars:
+    source_file: ./index.html
+    dest_file: /var/www/html
+   
+
+  tasks:
+    - name: Install Apache Web Server for RPM
+      yum: name=httpd state=latest
+      when: ansible_os_family == "RedHat"
+    
+    - name: Install Apache Web Server for Debian
+      apt: name=apache2 state=latest
+      when: ansible_os_family == "Debian"
+    
+    - name: Print Linux Family
+      debug: var=ansible_os_family
+      
+    - name: Copy index.html
+      copy: src={{ source_file }} dest={{ dest_file }} mode=0555
+      notify: Restart Httpd
+      when: ansible_os_family == "RedHat"
+      
+    - name: Copy index.html
+      copy: src={{ source_file }} dest={{ dest_file }} mode=0555
+      notify: Restart Apache2
+      when: ansible_os_family == "Debian"
+      
+    - name: Start Apache Web Server
+      service: name=httpd state=started enabled=yes
+      when: ansible_os_family == "RedHat"
+      
+    - name: Start Apache Web Server
+      service: name=apache2 state=started enabled=yes
+      when: ansible_os_family == "Debian"
+      
+    - shell: /usr/bin/uptime
+      register: result
+      
+    - name: Print result variable
+      debug: 
+        var: result
+    
+    - name: Print debug message
+      debug: 
+        msg: "The result was {{ result }}"
+      
+    
+  handlers:
+  - name: Restart Httpd
+    service: name=httpd state=restarted
+    when: ansible_os_family == "RedHat"
+    
+  - name: Restart Apache2
+    service: name=apache2 state=restarted
+    when: ansible_os_family == "Debian"
+    
+    
