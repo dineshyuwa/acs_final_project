@@ -75,6 +75,16 @@ resource "aws_s3_bucket_policy" "public_read" {
       }
     ]
   })
+  
+  depends_on = [
+    aws_s3_bucket.s3,
+    aws_s3_bucket_acl.acl,
+    aws_s3_bucket_ownership_controls.ownership,
+    aws_s3_bucket_public_access_block.pb,
+    aws_s3_bucket_lifecycle_configuration.lifecycle,
+    aws_s3_bucket_object.object,
+    aws_iam_policy.s3_bucket_policy,
+  ]
 }
 
 resource "aws_s3_bucket_ownership_controls" "ownership" {
