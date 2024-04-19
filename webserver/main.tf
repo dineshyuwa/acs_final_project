@@ -175,7 +175,7 @@ resource "aws_instance" "public_instance" {
    systemctl enable httpd
 
    # Download the image from the S3 URL
-   curl -o /var/www/html/example.jpeg https://project-website-images-143871234.s3.amazonaws.com/example.jpeg
+   curl -o /var/www/html/example.jpeg https://${aws_s3_bucket.s3.bucket}.s3.amazonaws.com/${aws_s3_bucket_object.object.key}
 
   # Create the HTML file with image reference
   echo "<html><body>" > /var/www/html/index.html
