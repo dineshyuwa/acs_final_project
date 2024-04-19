@@ -1,4 +1,4 @@
-name: Terraform Deploy to AWS
+name: Simple Workflow
 
 on:
   push:
@@ -6,31 +6,12 @@ on:
       - main
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: development
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Login to AWS
-        uses: aws-actions/login@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      - name: Initialize Terraform (Network)
-        run: |
-          cd development/network
-          terraform init -reconfigure
-      - name: Apply Terraform configuration (Network)
-        run: |
-          cd development/network
-          terraform apply
-      - name: Initialize Terraform (Webserver)
-        run: |
-          cd development/webserver
-          terraform init -reconfigure
-      - name: Apply Terraform configuration (Webserver)
-        run: |
-          cd development/webserver
-          terraform apply
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Print a message
+      run: echo "Hello, from GitHub Actions!"
